@@ -1,0 +1,2 @@
+Invoking command in '/home/samy/robot_ws/build/turtlebot3_multi_robot': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/samy/turtlebot3_ws/install/dual_tb3:/opt/ros/humble /usr/bin/cmake --build /home/samy/robot_ws/build/turtlebot3_multi_robot -- -j12 -l12
+Invoked command in '/home/samy/robot_ws/build/turtlebot3_multi_robot' returned '2': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/samy/turtlebot3_ws/install/dual_tb3:/opt/ros/humble /usr/bin/cmake --build /home/samy/robot_ws/build/turtlebot3_multi_robot -- -j12 -l12

@@ -1,0 +1,71 @@
+[0.004s] Invoking command in '/home/samy/robot_ws/build/turtlebot3_multi_robot': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/samy/turtlebot3_ws/install/dual_tb3:/opt/ros/humble /usr/bin/cmake /home/samy/robot_ws/src/tb3_multi_robot -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/samy/robot_ws/install/turtlebot3_multi_robot
+[0.097s] -- The C compiler identification is GNU 11.4.0
+[0.130s] -- The CXX compiler identification is GNU 11.4.0
+[0.134s] -- Detecting C compiler ABI info
+[0.162s] -- Detecting C compiler ABI info - done
+[0.165s] -- Check for working C compiler: /usr/bin/cc - skipped
+[0.165s] -- Detecting C compile features
+[0.165s] -- Detecting C compile features - done
+[0.167s] -- Detecting CXX compiler ABI info
+[0.198s] -- Detecting CXX compiler ABI info - done
+[0.201s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[0.201s] -- Detecting CXX compile features
+[0.201s] -- Detecting CXX compile features - done
+[0.203s] -- Found ament_cmake: 1.3.13 (/opt/ros/humble/share/ament_cmake/cmake)
+[0.268s] -- Found Python3: /usr/bin/python3 (found version "3.10.12") found components: Interpreter 
+[0.295s] -- Override CMake install command with custom implementation using symlinks instead of copying resources
+[0.341s] -- Configuring done
+[0.342s] -- Generating done
+[0.343s] -- Build files have been written to: /home/samy/robot_ws/build/turtlebot3_multi_robot
+[0.345s] Invoked command in '/home/samy/robot_ws/build/turtlebot3_multi_robot' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/samy/turtlebot3_ws/install/dual_tb3:/opt/ros/humble /usr/bin/cmake /home/samy/robot_ws/src/tb3_multi_robot -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/samy/robot_ws/install/turtlebot3_multi_robot
+[0.346s] Invoking command in '/home/samy/robot_ws/build/turtlebot3_multi_robot': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/samy/turtlebot3_ws/install/dual_tb3:/opt/ros/humble /usr/bin/cmake --build /home/samy/robot_ws/build/turtlebot3_multi_robot -- -j12 -l12
+[0.359s] Invoked command in '/home/samy/robot_ws/build/turtlebot3_multi_robot' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/samy/turtlebot3_ws/install/dual_tb3:/opt/ros/humble /usr/bin/cmake --build /home/samy/robot_ws/build/turtlebot3_multi_robot -- -j12 -l12
+[0.363s] Invoking command in '/home/samy/robot_ws/build/turtlebot3_multi_robot': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/samy/turtlebot3_ws/install/dual_tb3:/opt/ros/humble /usr/bin/cmake --install /home/samy/robot_ws/build/turtlebot3_multi_robot
+[0.365s] -- Install configuration: ""
+[0.366s] -- Execute custom install script
+[0.366s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/turtlebot3_multi_robot//launch/gazebo_multi_nav2_world.launch.py
+[0.369s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/turtlebot3_multi_robot//launch/gazebo_multi_world.launch.py
+[0.371s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/turtlebot3_multi_robot//launch/nav2_bringup/bringup_launch.py
+[0.375s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/turtlebot3_multi_robot//launch/nav2_bringup/localization_launch.py
+[0.377s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/turtlebot3_multi_robot//launch/nav2_bringup/navigation_launch.py
+[0.380s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/turtlebot3_multi_robot//launch/nav2_bringup/rviz_launch.py
+[0.382s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/turtlebot3_multi_robot//launch/nav2_bringup/slam_launch.py
+[0.385s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/turtlebot3_multi_robot//models/turtlebot3_burger/meshes/burger_base.dae
+[0.388s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/turtlebot3_multi_robot//models/turtlebot3_burger/meshes/lds.dae
+[0.391s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/turtlebot3_multi_robot//models/turtlebot3_burger/meshes/tire.dae
+[0.394s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/turtlebot3_multi_robot//models/turtlebot3_burger/model-1_4.sdf
+[0.396s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/turtlebot3_multi_robot//models/turtlebot3_burger/model.config
+[0.399s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/turtlebot3_multi_robot//models/turtlebot3_burger/model.sdf
+[0.401s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/turtlebot3_multi_robot//models/turtlebot3_waffle/meshes/lds.dae
+[0.404s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/turtlebot3_multi_robot//models/turtlebot3_waffle/meshes/r200.dae
+[0.406s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/turtlebot3_multi_robot//models/turtlebot3_waffle/meshes/tire.dae
+[0.409s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/turtlebot3_multi_robot//models/turtlebot3_waffle/meshes/waffle_base.dae
+[0.412s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/turtlebot3_multi_robot//models/turtlebot3_waffle/model-1_4.sdf
+[0.414s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/turtlebot3_multi_robot//models/turtlebot3_waffle/model.config
+[0.417s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/turtlebot3_multi_robot//models/turtlebot3_waffle/model.sdf
+[0.420s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/turtlebot3_multi_robot//models/turtlebot3_waffle/model_nocamera.sdf
+[0.422s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/turtlebot3_multi_robot//rviz/multi_nav2_default_view.rviz
+[0.425s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/turtlebot3_multi_robot//rviz/nav2_default_view.rviz
+[0.428s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/turtlebot3_multi_robot//urdf/common_properties.urdf
+[0.430s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/turtlebot3_multi_robot//urdf/turtlebot3_burger.urdf
+[0.433s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/turtlebot3_multi_robot//urdf/turtlebot3_waffle.urdf
+[0.436s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/turtlebot3_multi_robot//worlds/multi_empty_world.world
+[0.438s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/turtlebot3_multi_robot//worlds/multi_robot_world.world
+[0.441s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/turtlebot3_multi_robot//params/nav2_params.yaml
+[0.444s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/turtlebot3_multi_robot/environment/multi_robot.dsv
+[0.447s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/ament_index/resource_index/package_run_dependencies/turtlebot3_multi_robot
+[0.449s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/ament_index/resource_index/parent_prefix_path/turtlebot3_multi_robot
+[0.452s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/turtlebot3_multi_robot/environment/ament_prefix_path.sh
+[0.455s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/turtlebot3_multi_robot/environment/ament_prefix_path.dsv
+[0.457s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/turtlebot3_multi_robot/environment/path.sh
+[0.460s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/turtlebot3_multi_robot/environment/path.dsv
+[0.463s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/turtlebot3_multi_robot/local_setup.bash
+[0.465s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/turtlebot3_multi_robot/local_setup.sh
+[0.468s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/turtlebot3_multi_robot/local_setup.zsh
+[0.471s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/turtlebot3_multi_robot/local_setup.dsv
+[0.473s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/turtlebot3_multi_robot/package.dsv
+[0.476s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/ament_index/resource_index/packages/turtlebot3_multi_robot
+[0.479s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/turtlebot3_multi_robot/cmake/turtlebot3_multi_robotConfig.cmake
+[0.481s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/turtlebot3_multi_robot/cmake/turtlebot3_multi_robotConfig-version.cmake
+[0.484s] -- Symlinking: /home/samy/robot_ws/install/turtlebot3_multi_robot/share/turtlebot3_multi_robot/package.xml
+[0.488s] Invoked command in '/home/samy/robot_ws/build/turtlebot3_multi_robot' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/samy/turtlebot3_ws/install/dual_tb3:/opt/ros/humble /usr/bin/cmake --install /home/samy/robot_ws/build/turtlebot3_multi_robot
