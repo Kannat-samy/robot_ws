@@ -17,11 +17,11 @@ import os
 from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, GroupAction, IncludeLaunchDescription
 from launch.conditions import IfCondition, UnlessCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
-from launch_ros.actions import Node
+from launch_ros.actions import Node, SetRemap
 from nav2_common.launch import HasNodeParams, RewrittenYaml
 
 
@@ -132,8 +132,14 @@ def generate_launch_description():
     ld.add_action(start_map_saver_server_cmd)
     ld.add_action(start_lifecycle_manager_cmd)
 
-    # Running SLAM Toolbox (Only one of them will be run)
-    ld.add_action(start_slam_toolbox_cmd)
-    ld.add_action(start_slam_toolbox_cmd_with_params)
+    # Running SLAM Toolbox with remappings so it uses namespaced topics
+    # (/tf → tf, /scan → scan resolve to /robot1/tf and /robot1/scan in the pushed namespace)
+    ld.add_action(GroupAction([
+        SetRemap(src='/tf',        dst='tf'),
+        SetRemap(src='/tf_static', dst='tf_static'),
+        SetRemap(src='/scan',      dst='scan'),
+        start_slam_toolbox_cmd,
+        start_slam_toolbox_cmd_with_params,
+    ]))
 
     return ld
