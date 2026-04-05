@@ -23,7 +23,7 @@ def generate_launch_description():
     # =========================
     robots = [
         {'name': 'robot1', 'x_pose': '-2', 'y_pose': '-0.5', 'z_pose': 0.01},
-        {'name': 'robot2', 'x_pose': '-2', 'y_pose': '0.5',  'z_pose': 0.01},
+        {'name': 'robot2', 'x_pose': '-2', 'y_pose': '0.05',  'z_pose': 0.01},
     ]
 
     TURTLEBOT3_MODEL = 'burger'
