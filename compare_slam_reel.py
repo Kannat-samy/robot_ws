@@ -75,7 +75,7 @@ sim = read_bag("bag_sim_slam")
 ms  = compute_metrics(sim)
 
 print("Chargement bag_reel...")
-reel = read_bag("bag_real_slam4")
+reel = read_bag("bag_real_slam6")
 mr   = compute_metrics(reel)
 
 # ─── TERMINAL : tableau métriques ────────────────────────────────────────────
