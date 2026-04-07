@@ -14,6 +14,11 @@ from launch_ros.actions import Node
 from launch.event_handlers import OnProcessExit
 from launch.conditions import IfCondition
 
+try:
+        turtlebot3_gazebo_dir = get_package_share_directory('turtlebot3_gazebo')
+        models_dir = os.path.join(turtlebot3_gazebo_dir, 'models')
+except:
+        models_dir = "" # Juste au cas où, pour pas que ça plante
 
 def generate_launch_description():
     ld = LaunchDescription()
@@ -69,8 +74,14 @@ def generate_launch_description():
         package_dir, 'urdf', 'turtlebot3_' + TURTLEBOT3_MODEL + '.urdf'
     )
 
+    #world = os.path.join(
+    #    package_dir, 'worlds', 'multi_robot_world.world'
+    #)
+
     world = os.path.join(
-        package_dir, 'worlds', 'multi_robot_world.world'
+    turtlebot3_gazebo_dir,
+    'worlds',
+    'empty_world.world'
     )
 
     params_file = LaunchConfiguration('nav_params_file')

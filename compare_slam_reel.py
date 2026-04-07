@@ -71,11 +71,11 @@ def compute_metrics(d):
 
 # ─── CHARGEMENT ──────────────────────────────────────────────────────────────
 print("Chargement bag_sim_slam...")
-sim = read_bag("bag_sim_slam")
+sim = read_bag("bag_sim_slam_lidar2")
 ms  = compute_metrics(sim)
 
 print("Chargement bag_reel...")
-reel = read_bag("bag_real_slam6")
+reel = read_bag("bag_real_slam_lidar")
 mr   = compute_metrics(reel)
 
 # ─── TERMINAL : tableau métriques ────────────────────────────────────────────
@@ -115,15 +115,19 @@ ax_sim.plot(sim["x2"][0], sim["y2"][0], color="red",  marker='s', markersize=8)
 ax_sim.set_title("Trajectoire XY - Simulation SLAM", fontsize=12, fontweight='bold')
 ax_sim.set_xlabel("x (m)"); ax_sim.set_ylabel("y (m)")
 ax_sim.legend(fontsize=9); ax_sim.grid(True); ax_sim.axis('equal')
+ax_sim.xaxis.set_major_locator(plt.MultipleLocator(0.5))
+ax_sim.yaxis.set_major_locator(plt.MultipleLocator(0.2))
 
 # ── Trajectoire Réel
-ax_reel.plot(reel["x1"], reel["y1"], color="blue", lw=2.5, label='Leader (robot1)')
-ax_reel.plot(reel["x2"], reel["y2"], color="red",  lw=1.5, linestyle='--', label='Follower (robot2)')
-ax_reel.plot(reel["x1"][0], reel["y1"][0], color="blue", marker='s', markersize=8)
-ax_reel.plot(reel["x2"][0], reel["y2"][0], color="red",  marker='s', markersize=8)
+ax_reel.plot(-reel["x1"], -reel["y1"], color="blue", lw=2.5, label='Leader (robot1)')
+ax_reel.plot(-reel["x2"], -reel["y2"], color="red",  lw=1.5, linestyle='--', label='Follower (robot2)')
+ax_reel.plot(-reel["x1"][0], -reel["y1"][0], color="blue", marker='s', markersize=8)
+ax_reel.plot(-reel["x2"][0], -reel["y2"][0], color="red",  marker='s', markersize=8)
 ax_reel.set_title("Trajectoire XY - Reel", fontsize=12, fontweight='bold')
 ax_reel.set_xlabel("x (m)"); ax_reel.set_ylabel("y (m)")
 ax_reel.legend(fontsize=9); ax_reel.grid(True); ax_reel.axis('equal')
+ax_reel.xaxis.set_major_locator(plt.MultipleLocator(0.5))
+ax_reel.yaxis.set_major_locator(plt.MultipleLocator(0.2))
 
 # ── Tableau données brutes (6 instants)
 def get_samples(d, m, n=6):

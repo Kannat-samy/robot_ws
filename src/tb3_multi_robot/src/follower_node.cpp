@@ -1,253 +1,179 @@
 #include <cmath>
-#include <memory>
-#include <string>
 #include <vector>
-#include <deque>
-#include <algorithm>
+#include <limits>
 
 #include "rclcpp/rclcpp.hpp"
-#include "nav_msgs/msg/odometry.hpp"
+#include "sensor_msgs/msg/laser_scan.hpp"
 #include "geometry_msgs/msg/twist.hpp"
-#include "geometry_msgs/msg/point.hpp"
 
 using std::placeholders::_1;
 
-class SmartFollower : public rclcpp::Node
+class LidarFollower : public rclcpp::Node
 {
 public:
-  SmartFollower() : Node("follower_node")
+  LidarFollower() : Node("follower_node")
   {
-    // =================================================================================
-    //                                PARAMÈTRES
-    // =================================================================================
-    
-    leader_odom_topic_   = declare_parameter("leader_odom", "/robot1/odom");
-    follower_odom_topic_ = declare_parameter("follower_odom", "/robot2/odom");
-    cmd_vel_topic_       = declare_parameter("cmd_vel", "/robot2/cmd_vel");
+    scan_topic_   = declare_parameter("scan_topic",   "/robot2/scan");
+    cmd_vel_topic_ = declare_parameter("cmd_vel",     "/robot2/cmd_vel");
 
-    target_distance_ = declare_parameter("target_distance", 1.0);
+    target_distance_ = declare_parameter("target_distance", 0.5);
+    kp_dist_         = declare_parameter("kp_dist",         1.5);
+    kp_yaw_          = declare_parameter("kp_yaw",          2.0);
+    max_lin_vel_     = declare_parameter("max_lin_vel",      0.22);
+    max_ang_vel_     = declare_parameter("max_ang_vel",      2.0);
 
-    // KP_DIST : Ressort (Accélérateur/Frein)
-    kp_dist_ = declare_parameter("kp_dist", 2.0); 
+    // Seuil de segmentation : deux points consécutifs du scan appartiennent
+    // au même cluster s'ils sont à moins de cluster_tol_ mètres l'un de l'autre.
+    cluster_tol_ = declare_parameter("cluster_tol", 0.15);
 
-    // KP_YAW : Volant
-    kp_yaw_  = declare_parameter("kp_yaw", 3.0);
+    // Distance maximale pour ignorer les objets trop loin (murs, etc.)
+    max_range_ = declare_parameter("max_range", 3.5);
 
-    // Lookahead : Regarder devant sur le chemin
-    lookahead_dist_ = declare_parameter("lookahead_dist", 0.4);
-
-    max_lin_vel_ = declare_parameter("max_lin_vel", 0.5);
-    max_ang_vel_ = declare_parameter("max_ang_vel", 2.0);
-
-    // =================================================================================
-    //                                ROS SETUP
-    // =================================================================================
-    
-    leader_sub_ = create_subscription<nav_msgs::msg::Odometry>(
-      leader_odom_topic_, 10, std::bind(&SmartFollower::leaderCb, this, _1));
-
-    follower_sub_ = create_subscription<nav_msgs::msg::Odometry>(
-      follower_odom_topic_, 10, std::bind(&SmartFollower::followerCb, this, _1));
+    auto qos = rclcpp::QoS(rclcpp::SensorDataQoS());
+    scan_sub_ = create_subscription<sensor_msgs::msg::LaserScan>(
+      scan_topic_, qos, std::bind(&LidarFollower::scanCb, this, _1));
 
     cmd_pub_ = create_publisher<geometry_msgs::msg::Twist>(cmd_vel_topic_, 10);
 
-    timer_ = create_wall_timer(
-      std::chrono::milliseconds(20),
-      std::bind(&SmartFollower::controlLoop, this));
-
-    RCLCPP_INFO(get_logger(), "--- MODE SMART LINK : ANTI-BOUCLE ACTIVE ---");
+    RCLCPP_INFO(get_logger(), "LidarFollower prêt — scan: %s  cmd: %s",
+      scan_topic_.c_str(), cmd_vel_topic_.c_str());
   }
 
 private:
-  void leaderCb(const nav_msgs::msg::Odometry::SharedPtr msg)
+  // -------------------------------------------------------------------------
+  void scanCb(const sensor_msgs::msg::LaserScan::SharedPtr msg)
   {
-    leader_ = *msg;
-    leader_ok_ = true;
-    
-    geometry_msgs::msg::Point current_pos = msg->pose.pose.position;
-    
-    // --- 1. DETECTION DE BOUCLE (LOOP PRUNING) ---
-    // Si le leader repasse près d'un ANCIEN point de son historique,
-    // on considère que c'est un croisement/demi-tour.
-    // ON SUPPRIME la boucle pour que le follower coupe tout droit ("Short-circuit").
-    
-    if (!path_.empty()) {
-        // On cherche si on est proche d'un point passé (mais pas les 20 derniers cm pour pas détecter soi-même)
-        int intersection_idx = -1;
-        
-        // On parcourt l'historique du début jusqu'à "récemment"
-        for (size_t i = 0; i < path_.size(); i++) {
-            double d = std::hypot(current_pos.x - path_[i].x, current_pos.y - path_[i].y);
-            
-            // Si on recroise le chemin à moins de 20cm
-            if (d < 0.20) {
-                // Vérifier qu'on ne détecte pas juste le point précédent (faut qu'il y ait de la distance dans l'index)
-                // Disons qu'il faut au moins 50 points d'écart ou 1m de chemin parcouru
-                size_t dist_index = path_.size() - i;
-                if (dist_index > 50) { 
-                    intersection_idx = i;
-                    break; // On a trouvé la coupure la plus vieille
-                }
-            }
+    // 1. Convertir les rayons valides en points (repère robot)
+    struct Point2D { double x, y; };
+    std::vector<Point2D> pts;
+    pts.reserve(msg->ranges.size());
+
+    float angle = msg->angle_min;
+    for (float r : msg->ranges) {
+      if (std::isfinite(r) && r > msg->range_min && r < max_range_) {
+        pts.push_back({r * std::cos(angle), r * std::sin(angle)});
+      } else {
+        // On insère un point invalide pour conserver l'ordre angulaire
+        // (utile pour la segmentation consécutive)
+        pts.push_back({std::numeric_limits<double>::quiet_NaN(), 0.0});
+      }
+      angle += msg->angle_increment;
+    }
+
+    // 2. Segmentation en clusters (points consécutifs proches)
+    // Un cluster est une liste d'indices de points valides.
+    struct Cluster { std::vector<size_t> indices; double min_dist; };
+    std::vector<Cluster> clusters;
+    Cluster current;
+    current.min_dist = std::numeric_limits<double>::max();
+
+    for (size_t i = 0; i < pts.size(); ++i) {
+      const auto & p = pts[i];
+      if (!std::isfinite(p.x)) {
+        // Point invalide : ferme le cluster en cours
+        if (current.indices.size() >= 2) clusters.push_back(current);
+        current = Cluster();
+        current.min_dist = std::numeric_limits<double>::max();
+        continue;
+      }
+
+      double dist = std::hypot(p.x, p.y);
+
+      if (current.indices.empty()) {
+        current.indices.push_back(i);
+        current.min_dist = dist;
+      } else {
+        const auto & prev = pts[current.indices.back()];
+        double seg = std::hypot(p.x - prev.x, p.y - prev.y);
+        if (seg < cluster_tol_) {
+          current.indices.push_back(i);
+          if (dist < current.min_dist) current.min_dist = dist;
+        } else {
+          if (current.indices.size() >= 2) clusters.push_back(current);
+          current = Cluster();
+          current.indices.push_back(i);
+          current.min_dist = dist;
         }
+      }
+    }
+    if (current.indices.size() >= 2) clusters.push_back(current);
 
-        // Si on a trouvé une intersection (le leader a croisé ses traces)
-        if (intersection_idx != -1) {
-            // ON EFFACE TOUT ce qu'il y a entre l'intersection et maintenant
-            // Le chemin devient : [Début ... Intersection -> Point Actuel]
-            // La boucle disparaît de la mémoire du follower.
-            path_.erase(path_.begin() + intersection_idx + 1, path_.end());
-            // RCLCPP_INFO(get_logger(), "BOUCLE DETECTEE ! CHEMIN SIMPLIFIE.");
-        }
+    if (clusters.empty()) {
+      stopRobot();
+      return;
     }
 
-    // --- 2. AJOUT DU POINT ---
-    if (path_.empty()) {
-        path_.push_back(current_pos);
-    } else {
-        double dx = current_pos.x - path_.back().x;
-        double dy = current_pos.y - path_.back().y;
-        if (std::hypot(dx, dy) > 0.05) { 
-            path_.push_back(current_pos);
-        }
-    }
-  }
-
-  void followerCb(const nav_msgs::msg::Odometry::SharedPtr msg)
-  {
-    follower_ = *msg;
-    follower_ok_ = true;
-  }
-
-  void controlLoop()
-  {
-    if (!leader_ok_ || !follower_ok_) return;
-
-    double xF = follower_.pose.pose.position.x;
-    double yF = follower_.pose.pose.position.y;
-    double yawF = getYaw(follower_.pose.pose.orientation);
-
-    double xL = leader_.pose.pose.position.x;
-    double yL = leader_.pose.pose.position.y;
-
-    // CALIBRAGE
-    if (!distance_initialized_) {
-      target_distance_ = std::hypot(xL - xF, yL - yF);
-      RCLCPP_INFO(get_logger(), "DISTANCE PLANCHE : %.3f m", target_distance_);
-      distance_initialized_ = true;
+    // 3. Cluster le plus proche = robot1 (garanti par hypothèse)
+    const Cluster * best = &clusters[0];
+    for (const auto & c : clusters) {
+      if (c.min_dist < best->min_dist) best = &c;
     }
 
-    double current_dist = std::hypot(xL - xF, yL - yF);
-    double dist_error = current_dist - target_distance_;
-    
-    // --- VITESSE (RESSORT) ---
-    double v_leader = leader_.twist.twist.linear.x;
-    double v_cmd = v_leader + (kp_dist_ * dist_error);
+    // 4. Centroïde du cluster
+    double cx = 0.0, cy = 0.0;
+    for (size_t idx : best->indices) { cx += pts[idx].x; cy += pts[idx].y; }
+    cx /= best->indices.size();
+    cy /= best->indices.size();
+    double distance = std::hypot(cx, cy);
 
-    // --- DIRECTION (VOLANT) ---
-    double target_yaw = 0.0;
-    
-    // MODE PANIQUE : Si la distance est TROP GRANDE (> cible + 50cm)
-    // C'est que le Follower s'est perdu dans le demi-tour.
-    // -> ON OUBLIE LE CHEMIN, ON VISE LEADER DIRECTEMENT.
-    bool panic_mode = (dist_error > 0.5);
+    // Calibration : on mémorise la distance du premier frame comme consigne
+    if (!distance_calibrated_) {
+      target_distance_ = distance;
+      RCLCPP_INFO(get_logger(), "Distance initiale calibrée : %.3f m", target_distance_);
+      distance_calibrated_ = true;
+    }
+    double angle_to_target = std::atan2(cy, cx);  // dans le repère robot
 
-    if (path_.empty() || v_cmd < -0.05 || panic_mode) {
-        // Viser le leader directement
-        target_yaw = std::atan2(yL - yF, xL - xF);
-    } 
-    else {
-        // SUIVI DE CHEMIN NORMAL
-        double min_dist = 1e9;
-        size_t closest_idx = 0;
-        
-        // Optimisation recherche
-        size_t start_search = (last_closest_idx_ > 20) ? last_closest_idx_ - 20 : 0;
-        size_t end_search = std::min(path_.size(), last_closest_idx_ + 50);
-        if(path_.size() < 50) { start_search = 0; end_search = path_.size(); }
+    // 6. PID distance + PID yaw
+    double dist_error = distance - target_distance_;
 
-        for (size_t i = start_search; i < end_search; i++) {
-            double d = std::hypot(path_[i].x - xF, path_[i].y - yF);
-            if (d < min_dist) {
-                min_dist = d;
-                closest_idx = i;
-            }
-        }
-        last_closest_idx_ = closest_idx;
+    // Deadband : ne pas bouger pour de petites erreurs (bruit du scan)
+    double v_cmd     = (std::abs(dist_error)      > 0.05) ? kp_dist_ * dist_error      : 0.0;
+    double omega_cmd = (std::abs(angle_to_target) > 0.05) ? kp_yaw_  * angle_to_target : 0.0;
 
-        // Lookahead
-        geometry_msgs::msg::Point aim_point = path_.back();
-        double dist_ahead = 0.0;
-        for (size_t i = closest_idx; i < path_.size() - 1; i++) {
-            dist_ahead += std::hypot(path_[i+1].x - path_[i].x, path_[i+1].y - path_[i].y);
-            if (dist_ahead >= lookahead_dist_) {
-                aim_point = path_[i];
-                break;
-            }
-        }
-        target_yaw = std::atan2(aim_point.y - yF, aim_point.x - xF);
+    // Réduction vitesse linéaire si grand écart angulaire
+    if (std::abs(angle_to_target) > 0.5) {
+      v_cmd *= 0.3;
     }
 
-    // Calcul Erreur Angle
-    double yaw_err = target_yaw - yawF;
-    while (yaw_err > M_PI) yaw_err -= 2.0 * M_PI;
-    while (yaw_err < -M_PI) yaw_err += 2.0 * M_PI;
+    RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500,
+      "clusters=%zu  dist=%.3f  target=%.3f  err=%.3f  angle=%.3f  v=%.3f  w=%.3f",
+      clusters.size(), distance, target_distance_, dist_error,
+      angle_to_target, v_cmd, omega_cmd);
 
-    // Si on tourne FORT, on ralentit la vitesse linéaire pour pivoter proprement
-    if (std::abs(yaw_err) > 1.0) { // Si > 60 degrés
-         v_cmd *= 0.3; // On freine fort pour pivoter
-    }
-
-    double omega_cmd = kp_yaw_ * yaw_err;
-
-    // SECURITE ARRET
-    if (std::abs(v_leader) < 0.01 && std::abs(dist_error) < 0.03) {
-        v_cmd = 0.0;
-        omega_cmd = 0.0;
-    }
-
-    // Publication
     geometry_msgs::msg::Twist cmd;
-    cmd.linear.x = clamp(v_cmd, -max_lin_vel_, max_lin_vel_);
+    cmd.linear.x  = clamp(v_cmd,     -max_lin_vel_, max_lin_vel_);
     cmd.angular.z = clamp(omega_cmd, -max_ang_vel_, max_ang_vel_);
     cmd_pub_->publish(cmd);
   }
 
-  // UTILS
-  double getYaw(const geometry_msgs::msg::Quaternion &q) {
-    double siny_cosp = 2.0 * (q.w * q.z + q.x * q.y);
-    double cosy_cosp = 1.0 - 2.0 * (q.y * q.y + q.z * q.z);
-    return std::atan2(siny_cosp, cosy_cosp);
+  // -------------------------------------------------------------------------
+  void stopRobot()
+  {
+    cmd_pub_->publish(geometry_msgs::msg::Twist{});
   }
 
   double clamp(double v, double lo, double hi) {
     return std::max(lo, std::min(v, hi));
   }
 
-  // Vars
-  std::string leader_odom_topic_, follower_odom_topic_, cmd_vel_topic_;
-  double target_distance_; 
-  bool distance_initialized_{false};
-  
-  double kp_dist_, kp_yaw_, lookahead_dist_;
+  // Params
+  std::string scan_topic_, cmd_vel_topic_;
+  double target_distance_, kp_dist_, kp_yaw_;
   double max_lin_vel_, max_ang_vel_;
+  double cluster_tol_, max_range_;
 
-  nav_msgs::msg::Odometry leader_, follower_;
-  bool leader_ok_{false}, follower_ok_{false};
+  // Calibration distance
+  bool distance_calibrated_{false};
 
-  std::vector<geometry_msgs::msg::Point> path_;
-  size_t last_closest_idx_{0};
-
-  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr leader_sub_;
-  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr follower_sub_;
+  rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr scan_sub_;
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_pub_;
-  rclcpp::TimerBase::SharedPtr timer_;
 };
 
 int main(int argc, char **argv)
 {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<SmartFollower>());
+  rclcpp::spin(std::make_shared<LidarFollower>());
   rclcpp::shutdown();
   return 0;
 }
