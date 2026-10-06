@@ -32,6 +32,7 @@ urdf
 worlds 
 params 
 map
+behavior_trees
   DESTINATION share/${PROJECT_NAME}/
 )
 

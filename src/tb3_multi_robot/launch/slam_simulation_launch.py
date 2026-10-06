@@ -200,8 +200,8 @@ def generate_launch_description():
                     'map_server': 'False',
                     'params_file': params_file,
                     'default_bt_xml_filename': os.path.join(
-                        get_package_share_directory('nav2_bt_navigator'),
-                        'behavior_trees', 'navigate_w_replanning_and_recovery.xml'
+                        package_dir,
+                        'behavior_trees', 'navigate_to_pose_w_replanning_and_recovery.xml'
                     ),
                     'autostart': 'true',
                     'use_sim_time': use_sim_time,

@@ -4,3 +4,12 @@ log/
 .vscode/
 *.pyc
 __pycache__/
+# Ignorer les dépôts externes officiels
+src/packages_officiels/
+
+# Ignorer les données lourdes (rosbags et caches)
+analyse/bags/
+*.db3
+build/
+install/
+log/
