@@ -108,7 +108,7 @@ def generate_launch_description():
         output='screen',
         parameters=[{
             'yaml_filename': os.path.join(
-                get_package_share_directory('turtlebot3_navigation2'), 'map', 'map.yaml'
+                package_dir, 'map', 'map.yaml'
             ),
         }],
         remappings=remappings_tf
