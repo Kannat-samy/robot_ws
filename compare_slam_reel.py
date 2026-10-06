@@ -71,7 +71,7 @@ def compute_metrics(d):
 
 # ─── CHARGEMENT ──────────────────────────────────────────────────────────────
 print("Chargement bag_sim_slam...")
-sim = read_bag("bag_sim_slam_lidar2")
+sim = read_bag("bag_sim_slam")
 ms  = compute_metrics(sim)
 
 print("Chargement bag_reel...")

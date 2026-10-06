@@ -80,7 +80,7 @@ ms   = compute_metrics(slam)
 
 # ─── TERMINAL : tableau métriques ────────────────────────────────────────────
 print("\n" + "="*65)
-print(f"{'PARAMETRE':<35} {'AMCL':>12} {'SLAM':>12}")
+print(f"{'PARAMETRE':<35} {'Simulation':>12} {'Réel':>12}")
 print("="*65)
 rows_metrics = [
     ("Duree enregistree (s)",          f"{ma['dur']:.1f}",           f"{ms['dur']:.1f}"),
@@ -99,7 +99,7 @@ print("="*65)
 
 # ─── FIGURE ──────────────────────────────────────────────────────────────────
 fig = plt.figure(figsize=(20, 14))
-fig.suptitle("Comparaison AMCL vs SLAM - Simulation\nRobot Porteur (Leader/Follower)",
+fig.suptitle("Comparaison Simulation vs Réel\nRobot Porteur (Leader/Follower)",
              fontsize=15, fontweight="bold", y=0.98)
 
 ax_amcl  = fig.add_subplot(2, 2, 1)
@@ -107,21 +107,21 @@ ax_slam  = fig.add_subplot(2, 2, 2)
 ax_table = fig.add_subplot(2, 2, 3)
 ax_err   = fig.add_subplot(2, 2, 4)
 
-# ── Trajectoire AMCL
+# ── Trajectoire Simulation
 ax_amcl.plot(amcl["x1"], amcl["y1"], color="blue", lw=2.5, label='Leader (robot1)')
 ax_amcl.plot(amcl["x2"], amcl["y2"], color="red",  lw=1.5, linestyle='--', label='Follower (robot2)')
 ax_amcl.plot(amcl["x1"][0], amcl["y1"][0], color="blue", marker='s', markersize=8)
 ax_amcl.plot(amcl["x2"][0], amcl["y2"][0], color="red",  marker='s', markersize=8)
-ax_amcl.set_title("Trajectoire XY - AMCL", fontsize=12, fontweight='bold')
+ax_amcl.set_title("Trajectoire XY - Simulation", fontsize=12, fontweight='bold')
 ax_amcl.set_xlabel("x (m)"); ax_amcl.set_ylabel("y (m)")
 ax_amcl.legend(fontsize=9); ax_amcl.grid(True); ax_amcl.axis('equal')
 
-# ── Trajectoire SLAM
+# ── Trajectoire Réel
 ax_slam.plot(slam["x1"], slam["y1"], color="blue", lw=2.5, label='Leader (robot1)')
 ax_slam.plot(slam["x2"], slam["y2"], color="red",  lw=1.5, linestyle='--', label='Follower (robot2)')
 ax_slam.plot(slam["x1"][0], slam["y1"][0], color="blue", marker='s', markersize=8)
 ax_slam.plot(slam["x2"][0], slam["y2"][0], color="red",  marker='s', markersize=8)
-ax_slam.set_title("Trajectoire XY - SLAM", fontsize=12, fontweight='bold')
+ax_slam.set_title("Trajectoire XY - Réel", fontsize=12, fontweight='bold')
 ax_slam.set_xlabel("x (m)"); ax_slam.set_ylabel("y (m)")
 ax_slam.legend(fontsize=9); ax_slam.grid(True); ax_slam.axis('equal')
 
@@ -144,8 +144,8 @@ col_labels = ["t (s)", "x_lead", "y_lead", "x_foll", "y_foll", "dist (m)", "err 
 samples_a = get_samples(amcl, ma)
 samples_s = get_samples(slam, ms)
 
-# all_rows : 1 header AMCL + 6 lignes + 1 header SLAM + 6 lignes = 14 lignes
-all_rows = [["── AMCL ──"]*7] + samples_a + [["── SLAM ──"]*7] + samples_s
+# all_rows : 1 header Simulation + 6 lignes + 1 header Réel + 6 lignes = 14 lignes
+all_rows = [["── Simulation ──"]*7] + samples_a + [["── Réel ──"]*7] + samples_s
 
 ax_table.axis('off')
 tbl = ax_table.table(
@@ -163,20 +163,20 @@ for j in range(len(col_labels)):
     tbl[0, j].set_facecolor('#2c3e50')
     tbl[0, j].set_text_props(color='white', fontweight='bold')
 
-# Ligne AMCL header = row 1, ligne SLAM header = row 8 (1 + 6 + 1)
+# Ligne Simulation header = row 1, ligne Réel header = row 8 (1 + 6 + 1)
 for j in range(len(col_labels)):
     tbl[1, j].set_facecolor('#d0e4f7')
     tbl[1, j].set_text_props(fontweight='bold')
     tbl[8, j].set_facecolor('#fddede')
     tbl[8, j].set_text_props(fontweight='bold')
 
-# Alternance AMCL (rows 2-7)
+# Alternance Simulation (rows 2-7)
 for i in range(2, 8):
     for j in range(len(col_labels)):
         if i % 2 == 0:
             tbl[i, j].set_facecolor('#eaf3fb')
 
-# Alternance SLAM (rows 9-14)
+# Alternance Réel (rows 9-14)
 for i in range(9, 15):
     for j in range(len(col_labels)):
         if i % 2 == 0:
@@ -187,8 +187,8 @@ ax_table.set_title("Donnees brutes (6 instants)", fontsize=12, fontweight='bold'
 # ── Erreur de suivi (%)
 pct_amcl = ma["err"] / ma["target"] * 100
 pct_slam = ms["err"] / ms["target"] * 100
-ax_err.plot(amcl["t1"], pct_amcl, color="blue", lw=1.5, label=f'AMCL - MAE={ma["pct_err"]:.2f}%')
-ax_err.plot(slam["t1"], pct_slam, color="red",  lw=1.5, linestyle='--', label=f'SLAM - MAE={ms["pct_err"]:.2f}%')
+ax_err.plot(amcl["t1"], pct_amcl, color="blue", lw=1.5, label=f'Réel - MAE={ma["pct_err"]:.2f}%')
+ax_err.plot(slam["t1"], pct_slam, color="red",  lw=1.5, linestyle='--', label=f'Simulation - MAE={ms["pct_err"]:.2f}%')
 ax_err.axhline(0, color='k', lw=1, linestyle='--')
 ax_err.set_title("Erreur de suivi (% de la consigne)", fontsize=12, fontweight='bold')
 ax_err.set_xlabel("Temps (s)"); ax_err.set_ylabel("Erreur (%)")
